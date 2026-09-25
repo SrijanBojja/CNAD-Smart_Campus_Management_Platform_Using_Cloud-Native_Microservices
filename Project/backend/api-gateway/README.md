@@ -26,21 +26,22 @@ Centralized Edge Gateway and Routing Layer for the **Smart Campus Management Pla
 | :--- | :--- | :--- |
 | `SERVER_PORT` | Gateway listening port | `8080` |
 | `AUTH_SERVICE_URL` | Upstream Auth Service base URL | `http://localhost:8081` |
+| `STUDENT_SERVICE_URL` | Upstream Student Service base URL | `http://localhost:8082` |
 | `FRONTEND_URL` | Allowed origin for frontend client CORS | `http://localhost:5173` |
 
 ---
 
 ## 4. Routing Architecture
 
-### Active Routes (Milestone 1)
+### Active Routes
 | Route ID | Path Predicate | Target Destination |
 | :--- | :--- | :--- |
 | `auth-service-route` | `/api/v1/auth/**` | `${AUTH_SERVICE_URL}` (`http://localhost:8081`) |
+| `student-service-route` | `/api/v1/students/**` | `${STUDENT_SERVICE_URL}` (`http://localhost:8082`) |
 
 ### Planned Downstream Microservices Routing
 | Path Predicate | Target Service |
 | :--- | :--- |
-| `/api/v1/students/**` | `student-service` |
 | `/api/v1/courses/**` | `academic-service` |
 | `/api/v1/subjects/**` | `academic-service` |
 | `/api/v1/enrollments/**` | `academic-service` |
