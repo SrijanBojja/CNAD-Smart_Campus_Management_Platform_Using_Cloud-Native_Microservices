@@ -30,6 +30,7 @@ Centralized Edge Gateway and Routing Layer for the **Smart Campus Management Pla
 | `ACADEMIC_SERVICE_URL` | Upstream Academic Service base URL | `http://localhost:8083` |
 | `EVENT_SERVICE_URL` | Upstream Event Service base URL | `http://localhost:8085` |
 | `FACILITY_SERVICE_URL` | Upstream Facility Service base URL | `http://localhost:8086` |
+| `NOTIFICATION_SERVICE_URL` | Upstream Notification Service base URL | `http://localhost:8087` |
 | `FRONTEND_URL` | Allowed origin for frontend client CORS | `http://localhost:5173` |
 
 ---
@@ -49,11 +50,7 @@ Centralized Edge Gateway and Routing Layer for the **Smart Campus Management Pla
 | `attendance-service-route` | `/api/v1/attendance/**` | `${ATTENDANCE_SERVICE_URL}` (`http://localhost:8084`) |
 | `event-service-route` | `/api/v1/events/**` | `${EVENT_SERVICE_URL}` (`http://localhost:8085`) |
 | `facility-service-route` | `/api/v1/facilities/**` | `${FACILITY_SERVICE_URL}` (`http://localhost:8086`) |
-
-### Planned Downstream Microservices Routing
-| Path Predicate | Target Service |
-| :--- | :--- |
-| `/api/v1/notifications/**` | `notification-service` |
+| `notification-service-route` | `/api/v1/notifications/**` | `${NOTIFICATION_SERVICE_URL}` (`http://localhost:8087`) |
 
 ---
 

@@ -58,6 +58,11 @@ spring:
           predicates:
             - Path=/api/v1/facilities/**
 
+        - id: notification-service-route
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/v1/notifications/**
+
       globalcors:
         cors-configurations:
           '[/**]':
