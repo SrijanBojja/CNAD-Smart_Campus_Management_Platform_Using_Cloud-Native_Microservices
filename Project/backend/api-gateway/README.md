@@ -44,11 +44,11 @@ Centralized Edge Gateway and Routing Layer for the **Smart Campus Management Pla
 | `academic-service-enrollments-route` | `/api/v1/enrollments/**` | `${ACADEMIC_SERVICE_URL}` (`http://localhost:8083`) |
 | `academic-service-records-route` | `/api/v1/academic-records/**` | `${ACADEMIC_SERVICE_URL}` (`http://localhost:8083`) |
 | `academic-service-schedules-route` | `/api/v1/schedules/**` | `${ACADEMIC_SERVICE_URL}` (`http://localhost:8083`) |
+| `attendance-service-route` | `/api/v1/attendance/**` | `${ATTENDANCE_SERVICE_URL}` (`http://localhost:8084`) |
 
 ### Planned Downstream Microservices Routing
 | Path Predicate | Target Service |
 | :--- | :--- |
-| `/api/v1/attendance/**` | `attendance-service` |
 | `/api/v1/events/**` | `event-service` |
 | `/api/v1/facilities/**` | `facility-service` |
 | `/api/v1/notifications/**` | `notification-service` |
