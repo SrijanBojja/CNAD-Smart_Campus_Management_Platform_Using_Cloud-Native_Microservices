@@ -53,6 +53,11 @@ spring:
           predicates:
             - Path=/api/v1/events/**
 
+        - id: facility-service-route
+          uri: ${FACILITY_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/v1/facilities/**
+
       globalcors:
         cors-configurations:
           '[/**]':
