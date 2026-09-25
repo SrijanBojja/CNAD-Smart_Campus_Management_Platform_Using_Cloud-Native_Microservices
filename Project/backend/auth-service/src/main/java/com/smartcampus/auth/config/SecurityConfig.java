@@ -108,6 +108,7 @@ public class SecurityConfig {
                                 "/actuator/**"
                         ).permitAll()
                         .requestMatchers("/api/v1/auth/me").authenticated()
+                        .requestMatchers("/api/v1/internal/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

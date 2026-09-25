@@ -15,8 +15,10 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
@@ -40,15 +42,27 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class,
+            MissingServletRequestParameterException.class,
+            MethodArgumentTypeMismatchException.class,
+            BadRequestException.class
+    })
     public ResponseEntity<ErrorResponse> handleValidationException(
-            MethodArgumentNotValidException ex, HttpServletRequest request) {
-        String errorMessage = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(", "));
+            Exception ex, HttpServletRequest request) {
+        String errorMessage = ex.getMessage();
+        if (ex instanceof MethodArgumentNotValidException manve) {
+            errorMessage = manve.getBindingResult().getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.joining(", "));
+        } else if (ex instanceof MissingServletRequestParameterException msrpe) {
+            errorMessage = "Required request parameter '" + msrpe.getParameterName() + "' is not present";
+        } else if (ex instanceof MethodArgumentTypeMismatchException matme) {
+            errorMessage = "Parameter '" + matme.getName() + "' should be of type " + (matme.getRequiredType() != null ? matme.getRequiredType().getSimpleName() : "valid");
+        }
         
         ErrorResponse response = buildErrorResponse(HttpStatus.BAD_REQUEST, errorMessage, request.getRequestURI());
-        log.warn("Validation failed for request [{}]: traceId={}", request.getRequestURI(), response.getTraceId());
+        log.warn("Validation failed for request [{}]: traceId={}, error={}", request.getRequestURI(), response.getTraceId(), errorMessage);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 

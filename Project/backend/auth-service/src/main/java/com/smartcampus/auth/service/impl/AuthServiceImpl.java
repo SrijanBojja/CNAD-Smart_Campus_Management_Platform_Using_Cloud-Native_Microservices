@@ -22,13 +22,18 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartcampus.auth.dto.response.UserValidationResponse;
+import com.smartcampus.auth.exception.BadRequestException;
+
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+    private static final Set<String> VALID_ROLES = Set.of("ADMIN", "FACULTY", "STUDENT");
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
@@ -101,5 +106,38 @@ public class AuthServiceImpl implements AuthService {
                 .collect(Collectors.toList());
 
         return new UserDto(user.getId(), user.getUsername(), user.getEmail(), roles);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserValidationResponse validateUser(Long userId, String requiredRole) {
+        log.info("Validating user ID: {} with requiredRole: {}", userId, requiredRole);
+
+        if (requiredRole == null || requiredRole.trim().isEmpty()) {
+            throw new BadRequestException("Query parameter 'requiredRole' is required and cannot be blank");
+        }
+
+        String normalizedRole = requiredRole.trim().toUpperCase();
+        if (normalizedRole.startsWith("ROLE_")) {
+            normalizedRole = normalizedRole.substring(5);
+        }
+
+        if (!VALID_ROLES.contains(normalizedRole)) {
+            throw new BadRequestException("Invalid requiredRole '" + requiredRole + "'. Valid roles are: " + VALID_ROLES);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+        final String targetRole = normalizedRole;
+        boolean hasRequiredRole = user.getRoles().stream()
+                .map(Role::getName)
+                .map(name -> name.startsWith("ROLE_") ? name.substring(5) : name)
+                .anyMatch(name -> name.equalsIgnoreCase(targetRole));
+
+        boolean active = Boolean.TRUE.equals(user.getIsActive());
+
+        log.info("Validation completed for user ID {}: active={}, hasRole {}={}", userId, active, targetRole, hasRequiredRole);
+        return new UserValidationResponse(user.getId(), active, hasRequiredRole);
     }
 }

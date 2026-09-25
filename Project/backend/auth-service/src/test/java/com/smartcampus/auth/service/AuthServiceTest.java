@@ -160,4 +160,68 @@ class AuthServiceTest {
 
         assertThrows(ResourceNotFoundException.class, () -> authService.getCurrentUser("unknown"));
     }
+
+    @Test
+    @DisplayName("validateUser returns active=true and hasRequiredRole=true when user has the requested role")
+    void testValidateUserSuccess_HasRequiredRole() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+
+        com.smartcampus.auth.dto.response.UserValidationResponse response = authService.validateUser(1L, "STUDENT");
+
+        assertNotNull(response);
+        assertEquals(1L, response.getUserId());
+        assertTrue(response.isActive());
+        assertTrue(response.isHasRequiredRole());
+    }
+
+    @Test
+    @DisplayName("validateUser returns hasRequiredRole=false when user lacks the requested role")
+    void testValidateUserSuccess_RoleMismatch() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+
+        com.smartcampus.auth.dto.response.UserValidationResponse response = authService.validateUser(1L, "FACULTY");
+
+        assertNotNull(response);
+        assertEquals(1L, response.getUserId());
+        assertTrue(response.isActive());
+        assertFalse(response.isHasRequiredRole());
+    }
+
+    @Test
+    @DisplayName("validateUser returns active=false when user is disabled")
+    void testValidateUserSuccess_InactiveUser() {
+        sampleUser.setIsActive(false);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+
+        com.smartcampus.auth.dto.response.UserValidationResponse response = authService.validateUser(1L, "STUDENT");
+
+        assertNotNull(response);
+        assertEquals(1L, response.getUserId());
+        assertFalse(response.isActive());
+        assertTrue(response.isHasRequiredRole());
+    }
+
+    @Test
+    @DisplayName("validateUser throws ResourceNotFoundException for non-existent userId")
+    void testValidateUserNotFound() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> authService.validateUser(999L, "STUDENT"));
+    }
+
+    @Test
+    @DisplayName("validateUser throws BadRequestException for missing or blank requiredRole")
+    void testValidateUserMissingRole() {
+        assertThrows(com.smartcampus.auth.exception.BadRequestException.class,
+                () -> authService.validateUser(1L, ""));
+        assertThrows(com.smartcampus.auth.exception.BadRequestException.class,
+                () -> authService.validateUser(1L, null));
+    }
+
+    @Test
+    @DisplayName("validateUser throws BadRequestException for invalid role name")
+    void testValidateUserInvalidRole() {
+        assertThrows(com.smartcampus.auth.exception.BadRequestException.class,
+                () -> authService.validateUser(1L, "INVALID_ROLE"));
+    }
 }
