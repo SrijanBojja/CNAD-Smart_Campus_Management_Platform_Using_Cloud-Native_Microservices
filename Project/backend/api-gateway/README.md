@@ -27,6 +27,7 @@ Centralized Edge Gateway and Routing Layer for the **Smart Campus Management Pla
 | `SERVER_PORT` | Gateway listening port | `8080` |
 | `AUTH_SERVICE_URL` | Upstream Auth Service base URL | `http://localhost:8081` |
 | `STUDENT_SERVICE_URL` | Upstream Student Service base URL | `http://localhost:8082` |
+| `ACADEMIC_SERVICE_URL` | Upstream Academic Service base URL | `http://localhost:8083` |
 | `FRONTEND_URL` | Allowed origin for frontend client CORS | `http://localhost:5173` |
 
 ---
@@ -38,15 +39,15 @@ Centralized Edge Gateway and Routing Layer for the **Smart Campus Management Pla
 | :--- | :--- | :--- |
 | `auth-service-route` | `/api/v1/auth/**` | `${AUTH_SERVICE_URL}` (`http://localhost:8081`) |
 | `student-service-route` | `/api/v1/students/**` | `${STUDENT_SERVICE_URL}` (`http://localhost:8082`) |
+| `academic-service-courses-route` | `/api/v1/courses/**` | `${ACADEMIC_SERVICE_URL}` (`http://localhost:8083`) |
+| `academic-service-subjects-route` | `/api/v1/subjects/**` | `${ACADEMIC_SERVICE_URL}` (`http://localhost:8083`) |
+| `academic-service-enrollments-route` | `/api/v1/enrollments/**` | `${ACADEMIC_SERVICE_URL}` (`http://localhost:8083`) |
+| `academic-service-records-route` | `/api/v1/academic-records/**` | `${ACADEMIC_SERVICE_URL}` (`http://localhost:8083`) |
+| `academic-service-schedules-route` | `/api/v1/schedules/**` | `${ACADEMIC_SERVICE_URL}` (`http://localhost:8083`) |
 
 ### Planned Downstream Microservices Routing
 | Path Predicate | Target Service |
 | :--- | :--- |
-| `/api/v1/courses/**` | `academic-service` |
-| `/api/v1/subjects/**` | `academic-service` |
-| `/api/v1/enrollments/**` | `academic-service` |
-| `/api/v1/academic-records/**` | `academic-service` |
-| `/api/v1/schedules/**` | `academic-service` |
 | `/api/v1/attendance/**` | `attendance-service` |
 | `/api/v1/events/**` | `event-service` |
 | `/api/v1/facilities/**` | `facility-service` |
