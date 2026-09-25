@@ -107,14 +107,14 @@ Requires header `Authorization: Bearer <JWT>`.
 }
 ```
 
-### `GET /api/v1/internal/users/{userId}/validation?requiredRole={ROLE}` (Internal Service-to-Service)
-Internal service-integration endpoint used for cross-service identity and role validation (e.g., consumed by `student-service` when an ADMIN creates or links a student profile).
+### `GET /api/v1/internal/users/{userId}/validation[?requiredRole={ROLE}]` (Internal Service-to-Service)
+Internal service-integration endpoint used for cross-service identity and role validation (e.g., consumed by `student-service` when an ADMIN creates or links a student profile, or by `notification-service` when validating recipient users without a specific role requirement).
 
-> **Architectural Boundary**: Downstream microservices (such as `student-service`) must **never** access the `smart_campus_auth` database directly. All user existence, status, and role checks must be performed via this endpoint.
+> **Architectural Boundary**: Downstream microservices (such as `student-service` or `notification-service`) must **never** access the `smart_campus_auth` database directly. All user existence, status, and role checks must be performed via this endpoint.
 
 * **Authorization**: Requires `Authorization: Bearer <JWT>` with `ADMIN` role. Non-ADMIN callers receive `403 Forbidden`; unauthenticated callers receive `401 Unauthorized`.
 * **Path Parameter**: `userId` (numeric ID of the Auth user)
-* **Query Parameter**: `requiredRole` (e.g. `STUDENT`)
+* **Query Parameter**: `requiredRole` (optional, e.g. `STUDENT`, `FACULTY`, `ADMIN`)
 * **Success Response (200 OK):**
 ```json
 {
@@ -124,7 +124,7 @@ Internal service-integration endpoint used for cross-service identity and role v
 }
 ```
 * **Error Codes**:
-  * `400 Bad Request`: `requiredRole` query parameter missing or invalid.
+  * `400 Bad Request`: `requiredRole` query parameter is invalid.
   * `401 Unauthorized`: Missing or invalid JWT.
   * `403 Forbidden`: Authenticated user lacks `ADMIN` privileges.
   * `404 Not Found`: User with specified `userId` does not exist.

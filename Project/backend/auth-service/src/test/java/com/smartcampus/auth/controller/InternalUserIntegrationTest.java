@@ -40,6 +40,7 @@ class InternalUserIntegrationTest {
 
     private User studentUser;
     private User facultyUser;
+    private User inactiveUser;
 
     @BeforeEach
     void setUp() {
@@ -57,7 +58,7 @@ class InternalUserIntegrationTest {
         studentUser.setIsActive(true);
         studentUser.setCreatedAt(LocalDateTime.now());
         studentUser.setUpdatedAt(LocalDateTime.now());
-        studentUser.setRoles(Set.of(studentRole));
+        studentUser.setRoles(new java.util.HashSet<>(Set.of(studentRole)));
         studentUser = userRepository.save(studentUser);
 
         facultyUser = new User();
@@ -69,8 +70,20 @@ class InternalUserIntegrationTest {
         facultyUser.setIsActive(true);
         facultyUser.setCreatedAt(LocalDateTime.now());
         facultyUser.setUpdatedAt(LocalDateTime.now());
-        facultyUser.setRoles(Set.of(facultyRole));
+        facultyUser.setRoles(new java.util.HashSet<>(Set.of(facultyRole)));
         facultyUser = userRepository.save(facultyUser);
+
+        inactiveUser = new User();
+        inactiveUser.setUsername("integration_inactive");
+        inactiveUser.setEmail("integration_inactive@smartcampus.edu");
+        inactiveUser.setPasswordHash("$2a$10$abcdefghijklmnopqrstuvwxyz123456");
+        inactiveUser.setFirstName("Charlie");
+        inactiveUser.setLastName("Inactive");
+        inactiveUser.setIsActive(false);
+        inactiveUser.setCreatedAt(LocalDateTime.now());
+        inactiveUser.setUpdatedAt(LocalDateTime.now());
+        inactiveUser.setRoles(new java.util.HashSet<>(Set.of(studentRole)));
+        inactiveUser = userRepository.save(inactiveUser);
     }
 
     @Test
@@ -113,12 +126,37 @@ class InternalUserIntegrationTest {
 
     @Test
     @WithMockUser(username = "admin_user", roles = {"ADMIN"})
-    @DisplayName("ADMIN caller validates with missing requiredRole -> 400 BAD_REQUEST")
-    void testAdminValidatesMissingRole() throws Exception {
+    @DisplayName("ADMIN caller validates existing user with omitted requiredRole -> 200 OK with active=true and hasRequiredRole=true")
+    void testAdminValidatesOmittedRole() throws Exception {
         mockMvc.perform(get("/api/v1/internal/users/" + studentUser.getId() + "/validation")
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(studentUser.getId()))
+                .andExpect(jsonPath("$.active").value(true))
+                .andExpect(jsonPath("$.hasRequiredRole").value(true));
+    }
+
+    @Test
+    @WithMockUser(username = "admin_user", roles = {"ADMIN"})
+    @DisplayName("ADMIN caller validates inactive user with omitted requiredRole -> 200 OK with active=false and hasRequiredRole=true")
+    void testAdminValidatesInactiveUserOmittedRole() throws Exception {
+        mockMvc.perform(get("/api/v1/internal/users/" + inactiveUser.getId() + "/validation")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(inactiveUser.getId()))
+                .andExpect(jsonPath("$.active").value(false))
+                .andExpect(jsonPath("$.hasRequiredRole").value(true));
+    }
+
+    @Test
+    @WithMockUser(username = "admin_user", roles = {"ADMIN"})
+    @DisplayName("ADMIN caller validates non-existent user with omitted requiredRole -> 404 NOT_FOUND")
+    void testAdminValidatesNonExistentUserOmittedRole() throws Exception {
+        mockMvc.perform(get("/api/v1/internal/users/999999/validation")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"));
     }
 
     @Test

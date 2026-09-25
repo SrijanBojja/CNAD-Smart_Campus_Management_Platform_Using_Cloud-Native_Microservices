@@ -29,7 +29,7 @@ public class InternalUserController {
 
     @Operation(
             summary = "Validate User Existence, Status, and Role",
-            description = "Internal endpoint consumed by downstream microservices (e.g., student-service) to validate if an Auth user exists, is active, and possesses the required role.",
+            description = "Internal endpoint consumed by downstream microservices (e.g., student-service, notification-service) to validate if an Auth user exists, is active, and optionally possesses a required role.",
             security = @SecurityRequirement(name = "BearerAuth")
     )
     @ApiResponses(value = {
@@ -40,7 +40,7 @@ public class InternalUserController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Missing or invalid requiredRole query parameter",
+                    description = "Invalid requiredRole query parameter",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
@@ -64,8 +64,8 @@ public class InternalUserController {
     public ResponseEntity<UserValidationResponse> validateUser(
             @Parameter(description = "Numeric ID of the Auth user to validate", example = "101", required = true)
             @PathVariable("userId") Long userId,
-            @Parameter(description = "Required role name to check (e.g. STUDENT)", example = "STUDENT", required = true)
-            @RequestParam(name = "requiredRole", required = true) String requiredRole) {
+            @Parameter(description = "Optional required role name to check (e.g. STUDENT, FACULTY, ADMIN)", example = "STUDENT", required = false)
+            @RequestParam(name = "requiredRole", required = false) String requiredRole) {
         UserValidationResponse response = authService.validateUser(userId, requiredRole);
         return ResponseEntity.ok(response);
     }

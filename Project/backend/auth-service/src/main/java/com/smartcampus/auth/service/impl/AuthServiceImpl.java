@@ -113,31 +113,36 @@ public class AuthServiceImpl implements AuthService {
     public UserValidationResponse validateUser(Long userId, String requiredRole) {
         log.info("Validating user ID: {} with requiredRole: {}", userId, requiredRole);
 
-        if (requiredRole == null || requiredRole.trim().isEmpty()) {
-            throw new BadRequestException("Query parameter 'requiredRole' is required and cannot be blank");
-        }
+        String targetRole = null;
+        if (requiredRole != null && !requiredRole.trim().isEmpty()) {
+            String normalizedRole = requiredRole.trim().toUpperCase();
+            if (normalizedRole.startsWith("ROLE_")) {
+                normalizedRole = normalizedRole.substring(5);
+            }
 
-        String normalizedRole = requiredRole.trim().toUpperCase();
-        if (normalizedRole.startsWith("ROLE_")) {
-            normalizedRole = normalizedRole.substring(5);
-        }
-
-        if (!VALID_ROLES.contains(normalizedRole)) {
-            throw new BadRequestException("Invalid requiredRole '" + requiredRole + "'. Valid roles are: " + VALID_ROLES);
+            if (!VALID_ROLES.contains(normalizedRole)) {
+                throw new BadRequestException("Invalid requiredRole '" + requiredRole + "'. Valid roles are: " + VALID_ROLES);
+            }
+            targetRole = normalizedRole;
         }
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
 
-        final String targetRole = normalizedRole;
+        boolean active = Boolean.TRUE.equals(user.getIsActive());
+
+        if (targetRole == null) {
+            log.info("Validation completed for user ID {}: active={}, no specific role required", userId, active);
+            return new UserValidationResponse(user.getId(), active, true);
+        }
+
+        final String finalTargetRole = targetRole;
         boolean hasRequiredRole = user.getRoles().stream()
                 .map(Role::getName)
                 .map(name -> name.startsWith("ROLE_") ? name.substring(5) : name)
-                .anyMatch(name -> name.equalsIgnoreCase(targetRole));
+                .anyMatch(name -> name.equalsIgnoreCase(finalTargetRole));
 
-        boolean active = Boolean.TRUE.equals(user.getIsActive());
-
-        log.info("Validation completed for user ID {}: active={}, hasRole {}={}", userId, active, targetRole, hasRequiredRole);
+        log.info("Validation completed for user ID {}: active={}, hasRole {}={}", userId, active, finalTargetRole, hasRequiredRole);
         return new UserValidationResponse(user.getId(), active, hasRequiredRole);
     }
 }

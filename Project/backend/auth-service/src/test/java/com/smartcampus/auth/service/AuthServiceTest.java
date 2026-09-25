@@ -210,12 +210,21 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("validateUser throws BadRequestException for missing or blank requiredRole")
-    void testValidateUserMissingRole() {
-        assertThrows(com.smartcampus.auth.exception.BadRequestException.class,
-                () -> authService.validateUser(1L, ""));
-        assertThrows(com.smartcampus.auth.exception.BadRequestException.class,
-                () -> authService.validateUser(1L, null));
+    @DisplayName("validateUser returns active=true and hasRequiredRole=true when requiredRole is null or blank")
+    void testValidateUserSuccess_NoRequiredRole() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+
+        com.smartcampus.auth.dto.response.UserValidationResponse responseNull = authService.validateUser(1L, null);
+        assertNotNull(responseNull);
+        assertEquals(1L, responseNull.getUserId());
+        assertTrue(responseNull.isActive());
+        assertTrue(responseNull.isHasRequiredRole());
+
+        com.smartcampus.auth.dto.response.UserValidationResponse responseBlank = authService.validateUser(1L, "   ");
+        assertNotNull(responseBlank);
+        assertEquals(1L, responseBlank.getUserId());
+        assertTrue(responseBlank.isActive());
+        assertTrue(responseBlank.isHasRequiredRole());
     }
 
     @Test

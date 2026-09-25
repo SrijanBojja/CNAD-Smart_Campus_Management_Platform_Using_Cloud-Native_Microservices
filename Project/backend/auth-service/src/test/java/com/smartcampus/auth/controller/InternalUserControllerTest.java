@@ -86,26 +86,30 @@ class InternalUserControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/internal/users/{userId}/validation returns 400 when requiredRole is missing")
-    void testValidateUserMissingRequiredRole() throws Exception {
+    @DisplayName("GET /api/v1/internal/users/{userId}/validation returns 200 when requiredRole is omitted")
+    void testValidateUserOmittedRequiredRole() throws Exception {
+        UserValidationResponse response = new UserValidationResponse(101L, true, true);
+        when(authService.validateUser(101L, null)).thenReturn(response);
+
         mockMvc.perform(get("/api/v1/internal/users/101/validation")
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(101L))
+                .andExpect(jsonPath("$.active").value(true))
+                .andExpect(jsonPath("$.hasRequiredRole").value(true));
     }
 
     @Test
     @DisplayName("GET /api/v1/internal/users/{userId}/validation returns 400 when requiredRole is invalid")
     void testValidateUserInvalidRole() throws Exception {
         when(authService.validateUser(101L, "INVALID_ROLE"))
-                .thenThrow(new BadRequestException("Invalid requiredRole 'INVALID_ROLE'."));
+                .thenThrow(new BadRequestException("Invalid requiredRole 'INVALID_ROLE'. Valid roles are: [ADMIN, FACULTY, STUDENT]"));
 
         mockMvc.perform(get("/api/v1/internal/users/101/validation")
                         .param("requiredRole", "INVALID_ROLE")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.message").value("Invalid requiredRole 'INVALID_ROLE'."));
+                .andExpect(jsonPath("$.message").value("Invalid requiredRole 'INVALID_ROLE'. Valid roles are: [ADMIN, FACULTY, STUDENT]"));
     }
 }
