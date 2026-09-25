@@ -48,6 +48,11 @@ spring:
           predicates:
             - Path=/api/v1/attendance/**
 
+        - id: event-service-route
+          uri: ${EVENT_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/v1/events/**
+
       globalcors:
         cors-configurations:
           '[/**]':
