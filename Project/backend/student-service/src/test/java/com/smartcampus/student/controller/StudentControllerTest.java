@@ -223,4 +223,16 @@ class StudentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("GRADUATED"));
     }
+
+    @Test
+    @DisplayName("GET /api/v1/students/count returns 200 with student count")
+    void testGetStudentCountSuccess() throws Exception {
+        when(studentService.getStudentCount())
+                .thenReturn(new com.smartcampus.student.dto.response.StudentCountResponse(25L));
+
+        mockMvc.perform(get("/api/v1/students/count"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count").value(25))
+                .andExpect(jsonPath("$.totalElements").value(25));
+    }
 }

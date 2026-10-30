@@ -8,14 +8,12 @@ import api from "../api/axios";
  */
 const dashboardService = {
   /**
-   * GET /api/v1/students?size=1
-   * Requires ADMIN or FACULTY role.
+   * GET /api/v1/students/count
+   * Accessible by all authenticated roles (ADMIN, FACULTY, STUDENT).
    */
   getStudentCount: async () => {
-    const response = await api.get("/api/v1/students", {
-      params: { page: 0, size: 1 },
-    });
-    return response.data.totalElements;
+    const response = await api.get("/api/v1/students/count");
+    return response.data?.count ?? response.data?.totalElements ?? response.data;
   },
 
   /**

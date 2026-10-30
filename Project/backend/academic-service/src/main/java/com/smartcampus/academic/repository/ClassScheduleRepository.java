@@ -13,6 +13,8 @@ public interface ClassScheduleRepository extends JpaRepository<ClassSchedule, Lo
 
     Page<ClassSchedule> findBySubjectId(Long subjectId, Pageable pageable);
 
+    boolean existsBySubjectId(Long subjectId);
+
     Page<ClassSchedule> findByFacultyUserId(Long facultyUserId, Pageable pageable);
 
     Page<ClassSchedule> findByDayOfWeek(String dayOfWeek, Pageable pageable);

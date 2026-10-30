@@ -29,6 +29,15 @@ public class User {
     @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
 
+    @Column(name = "employee_id", length = 50)
+    private String employeeId;
+
+    @Column(name = "department", length = 100)
+    private String department;
+
+    @Column(name = "phone", length = 50)
+    private String phone;
+
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
@@ -118,6 +127,30 @@ public class User {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public Boolean getIsActive() {

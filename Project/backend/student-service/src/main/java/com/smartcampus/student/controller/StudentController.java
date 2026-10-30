@@ -4,6 +4,7 @@ import com.smartcampus.student.dto.request.CreateStudentRequest;
 import com.smartcampus.student.dto.request.UpdateStudentRequest;
 import com.smartcampus.student.dto.request.UpdateStudentStatusRequest;
 import com.smartcampus.student.dto.response.ErrorResponse;
+import com.smartcampus.student.dto.response.StudentCountResponse;
 import com.smartcampus.student.dto.response.StudentResponse;
 import com.smartcampus.student.security.UserPrincipal;
 import com.smartcampus.student.service.StudentService;
@@ -70,6 +71,29 @@ public class StudentController {
             @PageableDefault(page = 0, size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<StudentResponse> page = studentService.listStudents(pageable);
         return ResponseEntity.ok(page);
+    }
+
+    @Operation(
+            summary = "Get Total Student Count",
+            description = "Retrieve aggregate student count without exposing student records. Accessible by all authenticated roles (ADMIN, FACULTY, STUDENT)."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Total student count retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = StudentCountResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - Missing or invalid JWT token",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping(value = "/count", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT')")
+    public ResponseEntity<StudentCountResponse> getStudentCount() {
+        StudentCountResponse response = studentService.getStudentCount();
+        return ResponseEntity.ok(response);
     }
 
     @Operation(

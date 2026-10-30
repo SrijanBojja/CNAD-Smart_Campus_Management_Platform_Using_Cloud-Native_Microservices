@@ -35,6 +35,60 @@ const AppRoutes = () => {
         }
       />
 
+      <Route
+        path="/students"
+        element={
+          <ProtectedRoute>
+            <Dashboard initialPage="students" />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/faculty"
+        element={
+          <ProtectedRoute>
+            <Dashboard initialPage="faculty" />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/academics"
+        element={
+          <ProtectedRoute>
+            <Dashboard initialPage="academics" />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/attendance"
+        element={
+          <ProtectedRoute>
+            <Dashboard initialPage="attendance" />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/events"
+        element={
+          <ProtectedRoute>
+            <Dashboard initialPage="events" />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/facilities"
+        element={
+          <ProtectedRoute>
+            <Dashboard initialPage="facilities" />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

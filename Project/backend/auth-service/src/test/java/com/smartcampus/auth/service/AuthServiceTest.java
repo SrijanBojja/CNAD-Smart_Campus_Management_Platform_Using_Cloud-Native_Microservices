@@ -1,13 +1,16 @@
 package com.smartcampus.auth.service;
 
 import com.smartcampus.auth.dto.request.LoginRequest;
+import com.smartcampus.auth.dto.request.RegisterStudentRequest;
 import com.smartcampus.auth.dto.response.AuthResponse;
 import com.smartcampus.auth.dto.response.UserDto;
 import com.smartcampus.auth.entity.Role;
 import com.smartcampus.auth.entity.User;
+import com.smartcampus.auth.exception.DuplicateResourceException;
 import com.smartcampus.auth.exception.InvalidCredentialsException;
 import com.smartcampus.auth.exception.ResourceNotFoundException;
 import com.smartcampus.auth.exception.UserDisabledException;
+import com.smartcampus.auth.repository.RoleRepository;
 import com.smartcampus.auth.repository.UserRepository;
 import com.smartcampus.auth.security.JwtTokenProvider;
 import com.smartcampus.auth.service.impl.AuthServiceImpl;
@@ -49,6 +52,9 @@ class AuthServiceTest {
     @Mock
     private JwtTokenProvider tokenProvider;
 
+    @Mock
+    private RoleRepository roleRepository;
+
     private PasswordEncoder passwordEncoder;
 
     private AuthServiceImpl authService;
@@ -58,8 +64,8 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        authService = new AuthServiceImpl(authenticationManager, userRepository, tokenProvider);
         passwordEncoder = new BCryptPasswordEncoder();
+        authService = new AuthServiceImpl(authenticationManager, userRepository, tokenProvider, roleRepository, passwordEncoder);
 
         studentRole = new Role(1L, "STUDENT", "Student Role");
         sampleUser = new User();
@@ -232,5 +238,57 @@ class AuthServiceTest {
     void testValidateUserInvalidRole() {
         assertThrows(com.smartcampus.auth.exception.BadRequestException.class,
                 () -> authService.validateUser(1L, "INVALID_ROLE"));
+    }
+
+    @Test
+    @DisplayName("registerStudent successfully creates and persists a student user with hashed password and STUDENT role")
+    void testRegisterStudentSuccess() {
+        RegisterStudentRequest request = new RegisterStudentRequest("new_student", "new.student@campus.edu", "PlainPass123", "New", "Student");
+        Role dbStudentRole = new Role(3L, "STUDENT", "Student role");
+
+        when(userRepository.existsByUsername("new_student")).thenReturn(false);
+        when(userRepository.existsByEmail("new.student@campus.edu")).thenReturn(false);
+        when(roleRepository.findByName("STUDENT")).thenReturn(Optional.of(dbStudentRole));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User saved = invocation.getArgument(0);
+            saved.setId(10L);
+            return saved;
+        });
+
+        UserDto result = authService.registerStudent(request);
+
+        assertNotNull(result);
+        assertEquals(10L, result.getId());
+        assertEquals("new_student", result.getUsername());
+        assertEquals("new.student@campus.edu", result.getEmail());
+        assertEquals("New", result.getFirstName());
+        assertEquals("Student", result.getLastName());
+        assertTrue(result.getRoles().contains("STUDENT"));
+        verify(userRepository, times(1)).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("registerStudent throws DuplicateResourceException when username already exists")
+    void testRegisterStudentDuplicateUsername() {
+        RegisterStudentRequest request = new RegisterStudentRequest("existing_user", "email@campus.edu", "Password123");
+        when(userRepository.existsByUsername("existing_user")).thenReturn(true);
+
+        DuplicateResourceException ex = assertThrows(DuplicateResourceException.class,
+                () -> authService.registerStudent(request));
+        assertTrue(ex.getMessage().contains("Username 'existing_user' is already taken"));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("registerStudent throws DuplicateResourceException when email already exists")
+    void testRegisterStudentDuplicateEmail() {
+        RegisterStudentRequest request = new RegisterStudentRequest("unique_user", "existing@campus.edu", "Password123");
+        when(userRepository.existsByUsername("unique_user")).thenReturn(false);
+        when(userRepository.existsByEmail("existing@campus.edu")).thenReturn(true);
+
+        DuplicateResourceException ex = assertThrows(DuplicateResourceException.class,
+                () -> authService.registerStudent(request));
+        assertTrue(ex.getMessage().contains("Email 'existing@campus.edu' is already registered"));
+        verify(userRepository, never()).save(any(User.class));
     }
 }

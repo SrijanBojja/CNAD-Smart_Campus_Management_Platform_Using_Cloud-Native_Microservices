@@ -113,10 +113,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ExceptionHandler({DuplicateResourceException.class, DataIntegrityViolationException.class})
     public ResponseEntity<ErrorResponse> handleConflict(
-            DataIntegrityViolationException ex, HttpServletRequest request) {
-        ErrorResponse response = buildErrorResponse(HttpStatus.CONFLICT, "Resource conflict or duplicate entry", request.getRequestURI());
+            Exception ex, HttpServletRequest request) {
+        String message = (ex instanceof DuplicateResourceException) ? ex.getMessage() : "Resource conflict or duplicate entry";
+        ErrorResponse response = buildErrorResponse(HttpStatus.CONFLICT, message, request.getRequestURI());
+        log.warn("Conflict on [{}] (traceId={}): {}", request.getRequestURI(), response.getTraceId(), message);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 

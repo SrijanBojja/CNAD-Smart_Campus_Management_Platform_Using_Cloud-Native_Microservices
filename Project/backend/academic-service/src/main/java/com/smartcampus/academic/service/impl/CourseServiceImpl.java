@@ -6,10 +6,12 @@ import com.smartcampus.academic.dto.request.UpdateCourseStatusRequest;
 import com.smartcampus.academic.dto.response.CourseResponse;
 import com.smartcampus.academic.entity.Course;
 import com.smartcampus.academic.entity.CourseStatus;
+import com.smartcampus.academic.entity.Subject;
 import com.smartcampus.academic.exception.BadRequestException;
 import com.smartcampus.academic.exception.DuplicateResourceException;
 import com.smartcampus.academic.exception.ResourceNotFoundException;
 import com.smartcampus.academic.repository.CourseRepository;
+import com.smartcampus.academic.repository.SubjectRepository;
 import com.smartcampus.academic.service.CourseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,15 +20,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class CourseServiceImpl implements CourseService {
 
     private static final Logger log = LoggerFactory.getLogger(CourseServiceImpl.class);
 
     private final CourseRepository courseRepository;
+    private final SubjectRepository subjectRepository;
 
-    public CourseServiceImpl(CourseRepository courseRepository) {
+    public CourseServiceImpl(CourseRepository courseRepository, SubjectRepository subjectRepository) {
         this.courseRepository = courseRepository;
+        this.subjectRepository = subjectRepository;
     }
 
     @Override
@@ -117,5 +123,22 @@ public class CourseServiceImpl implements CourseService {
         log.info("Course status successfully updated for ID: {} to {}", updated.getId(), updated.getStatus());
 
         return CourseResponse.fromEntity(updated);
+    }
+
+    @Override
+    @Transactional
+    public void deleteCourse(Long id) {
+        log.info("Deleting course with ID: {}", id);
+
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + id));
+
+        List<Subject> subjects = subjectRepository.findByCourseId(id);
+        if (!subjects.isEmpty()) {
+            throw new BadRequestException("Cannot delete course '" + course.getCourseCode() + "' because it has " + subjects.size() + " associated subject(s). Please remove or reassign the subjects first.");
+        }
+
+        courseRepository.delete(course);
+        log.info("Course successfully deleted with ID: {}", id);
     }
 }

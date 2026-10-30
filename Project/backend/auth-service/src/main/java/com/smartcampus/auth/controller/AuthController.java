@@ -1,6 +1,8 @@
 package com.smartcampus.auth.controller;
 
 import com.smartcampus.auth.dto.request.LoginRequest;
+import com.smartcampus.auth.dto.request.RegisterFacultyRequest;
+import com.smartcampus.auth.dto.request.RegisterStudentRequest;
 import com.smartcampus.auth.dto.response.AuthResponse;
 import com.smartcampus.auth.dto.response.ErrorResponse;
 import com.smartcampus.auth.dto.response.UserDto;
@@ -16,8 +18,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -104,5 +108,92 @@ public class AuthController {
 
         UserDto userDto = authService.getCurrentUser(username);
         return ResponseEntity.ok(userDto);
+    }
+
+    @Operation(
+            summary = "Register Student User Account",
+            description = "Create a new student authentication account with the STUDENT role. Accessible only by administrators.",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Student user account created successfully",
+                    content = @Content(schema = @Schema(implementation = UserDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid payload or validation failure",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - Missing or invalid JWT token",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - Only administrators can register students",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Conflict - Username or email already registered",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping(value = {"/students", "/register-student"}, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserDto> registerStudent(@Valid @RequestBody RegisterStudentRequest request) {
+        log.info("Received request to register student account for username: '{}'", request.getUsername());
+        UserDto createdUser = authService.registerStudent(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+    }
+
+    @Operation(
+            summary = "Register Faculty User Account",
+            description = "Create a new faculty authentication account with the FACULTY role. Accessible only by administrators.",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Faculty user account created successfully",
+                    content = @Content(schema = @Schema(implementation = UserDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid payload or validation failure",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - Missing or invalid JWT token",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - Only administrators can register faculty",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Conflict - Username or email already registered",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping(value = {"/faculty", "/register-faculty"}, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserDto> registerFaculty(@Valid @RequestBody RegisterFacultyRequest request) {
+        log.info("Received request to register faculty account for username: '{}'", request.getUsername());
+        UserDto createdUser = authService.registerFaculty(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+    }
+
+    @Operation(summary = "Get Faculty Users", description = "Get list of active faculty members for assignment dropdowns.")
+    @GetMapping(value = "/faculty", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT')")
+    public ResponseEntity<java.util.List<UserDto>> getFacultyUsers() {
+        return ResponseEntity.ok(authService.getFacultyUsers());
     }
 }

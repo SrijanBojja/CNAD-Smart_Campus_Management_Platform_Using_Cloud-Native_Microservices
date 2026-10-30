@@ -3,6 +3,7 @@ package com.smartcampus.student.service;
 import com.smartcampus.student.dto.request.CreateStudentRequest;
 import com.smartcampus.student.dto.request.UpdateStudentRequest;
 import com.smartcampus.student.dto.request.UpdateStudentStatusRequest;
+import com.smartcampus.student.dto.response.StudentCountResponse;
 import com.smartcampus.student.dto.response.StudentResponse;
 import com.smartcampus.student.security.UserPrincipal;
 import org.springframework.data.domain.Page;
@@ -14,4 +15,5 @@ public interface StudentService {
     Page<StudentResponse> listStudents(Pageable pageable);
     StudentResponse updateStudent(Long id, UpdateStudentRequest request);
     StudentResponse updateStudentStatus(Long id, UpdateStudentStatusRequest request);
+    StudentCountResponse getStudentCount();
 }

@@ -6,8 +6,10 @@ import com.smartcampus.academic.dto.request.UpdateSubjectRequest;
 import com.smartcampus.academic.dto.response.SubjectResponse;
 import com.smartcampus.academic.entity.Course;
 import com.smartcampus.academic.entity.Subject;
+import com.smartcampus.academic.exception.BadRequestException;
 import com.smartcampus.academic.exception.DuplicateResourceException;
 import com.smartcampus.academic.exception.ResourceNotFoundException;
+import com.smartcampus.academic.repository.ClassScheduleRepository;
 import com.smartcampus.academic.repository.CourseRepository;
 import com.smartcampus.academic.repository.SubjectRepository;
 import com.smartcampus.academic.service.SubjectService;
@@ -26,13 +28,16 @@ public class SubjectServiceImpl implements SubjectService {
     private final SubjectRepository subjectRepository;
     private final CourseRepository courseRepository;
     private final AuthServiceClient authServiceClient;
+    private final ClassScheduleRepository scheduleRepository;
 
     public SubjectServiceImpl(SubjectRepository subjectRepository,
                               CourseRepository courseRepository,
-                              AuthServiceClient authServiceClient) {
+                              AuthServiceClient authServiceClient,
+                              ClassScheduleRepository scheduleRepository) {
         this.subjectRepository = subjectRepository;
         this.courseRepository = courseRepository;
         this.authServiceClient = authServiceClient;
+        this.scheduleRepository = scheduleRepository;
     }
 
     @Override
@@ -116,6 +121,11 @@ public class SubjectServiceImpl implements SubjectService {
         log.info("Deleting subject with ID: {}", id);
         Subject subject = subjectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Subject not found with ID: " + id));
+
+        if (scheduleRepository != null && scheduleRepository.existsBySubjectId(id)) {
+            throw new BadRequestException("Cannot delete subject '" + subject.getSubjectCode() + "' because it has associated class schedule(s). Please remove the schedules first.");
+        }
+
         subjectRepository.delete(subject);
         log.info("Subject successfully deleted with ID: {}", id);
     }

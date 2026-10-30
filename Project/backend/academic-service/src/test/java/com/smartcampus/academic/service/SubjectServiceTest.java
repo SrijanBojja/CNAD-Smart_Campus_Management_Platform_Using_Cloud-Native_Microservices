@@ -40,6 +40,9 @@ class SubjectServiceTest {
     @Mock
     private CourseRepository courseRepository;
 
+    @Mock
+    private com.smartcampus.academic.repository.ClassScheduleRepository scheduleRepository;
+
     @InjectMocks
     private SubjectServiceImpl subjectService;
 
@@ -97,9 +100,21 @@ class SubjectServiceTest {
     @DisplayName("Delete subject successfully")
     void testDeleteSubject() {
         when(subjectRepository.findById(10L)).thenReturn(Optional.of(sampleSubject));
+        when(scheduleRepository.existsBySubjectId(10L)).thenReturn(false);
 
         subjectService.deleteSubject(10L);
 
         verify(subjectRepository).delete(sampleSubject);
+    }
+
+    @Test
+    @DisplayName("Delete subject fails when class schedules exist")
+    void testDeleteSubjectFailsWithSchedules() {
+        when(subjectRepository.findById(10L)).thenReturn(Optional.of(sampleSubject));
+        when(scheduleRepository.existsBySubjectId(10L)).thenReturn(true);
+
+        assertThatThrownBy(() -> subjectService.deleteSubject(10L))
+                .isInstanceOf(com.smartcampus.academic.exception.BadRequestException.class)
+                .hasMessageContaining("Cannot delete subject");
     }
 }

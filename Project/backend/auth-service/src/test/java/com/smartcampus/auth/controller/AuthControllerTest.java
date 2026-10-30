@@ -2,8 +2,10 @@ package com.smartcampus.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartcampus.auth.dto.request.LoginRequest;
+import com.smartcampus.auth.dto.request.RegisterStudentRequest;
 import com.smartcampus.auth.dto.response.AuthResponse;
 import com.smartcampus.auth.dto.response.UserDto;
+import com.smartcampus.auth.exception.DuplicateResourceException;
 import com.smartcampus.auth.exception.GlobalExceptionHandler;
 import com.smartcampus.auth.exception.InvalidCredentialsException;
 import com.smartcampus.auth.service.AuthService;
@@ -130,5 +132,53 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.message").value("Authentication required"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/students returns 201 Created and UserDto on valid request")
+    void testRegisterStudentSuccess() throws Exception {
+        RegisterStudentRequest request = new RegisterStudentRequest("john_doe", "john.doe@campus.edu", "SecretPass123", "John", "Doe");
+        UserDto userDto = new UserDto(5L, "john_doe", "john.doe@campus.edu", "John", "Doe", List.of("STUDENT"));
+
+        when(authService.registerStudent(any(RegisterStudentRequest.class))).thenReturn(userDto);
+
+        mockMvc.perform(post("/api/v1/auth/students")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(5L))
+                .andExpect(jsonPath("$.username").value("john_doe"))
+                .andExpect(jsonPath("$.email").value("john.doe@campus.edu"))
+                .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.lastName").value("Doe"))
+                .andExpect(jsonPath("$.roles[0]").value("STUDENT"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/students returns 400 Bad Request on missing required fields")
+    void testRegisterStudentValidationFailure() throws Exception {
+        RegisterStudentRequest invalidRequest = new RegisterStudentRequest("", "not-an-email", "");
+
+        mockMvc.perform(post("/api/v1/auth/students")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/students returns 409 Conflict when username/email already exists")
+    void testRegisterStudentDuplicateConflict() throws Exception {
+        RegisterStudentRequest request = new RegisterStudentRequest("john_doe", "john.doe@campus.edu", "SecretPass123");
+
+        when(authService.registerStudent(any(RegisterStudentRequest.class)))
+                .thenThrow(new DuplicateResourceException("Username 'john_doe' is already taken"));
+
+        mockMvc.perform(post("/api/v1/auth/students")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.message").value("Username 'john_doe' is already taken"));
     }
 }

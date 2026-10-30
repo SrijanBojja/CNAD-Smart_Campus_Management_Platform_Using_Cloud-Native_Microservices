@@ -311,4 +311,34 @@ class StudentIntegrationTest {
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.totalElements").value(2));
     }
+
+    @Test
+    @WithMockUser(username = "student_user", roles = {"STUDENT"})
+    @DisplayName("16. Student can access GET /api/v1/students/count -> 200 OK")
+    void testGetStudentCountAsStudent() throws Exception {
+        mockMvc.perform(get("/api/v1/students/count")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2));
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @DisplayName("17. Admin can access GET /api/v1/students/count -> 200 OK")
+    void testGetStudentCountAsAdmin() throws Exception {
+        mockMvc.perform(get("/api/v1/students/count")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2));
+    }
+
+    @Test
+    @DisplayName("18. Unauthenticated request to /api/v1/students/count -> 401 Unauthorized")
+    void testGetStudentCountUnauthenticated() throws Exception {
+        mockMvc.perform(get("/api/v1/students/count")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
 }

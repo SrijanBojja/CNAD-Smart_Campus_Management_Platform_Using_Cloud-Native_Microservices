@@ -6,8 +6,16 @@ import "./Dashboard.css";
 /**
  * StatCard — individual stat tile with loading, error, and success states.
  */
-const StatCard = ({ iconClass, icon, label, value, note, loading, error }) => (
-  <div className="stat-card" role="group" aria-label={label}>
+const StatCard = ({ iconClass, icon, label, value, note, loading, error, onClick }) => (
+  <div
+    className="stat-card"
+    role={onClick ? "button" : "group"}
+    tabIndex={onClick ? 0 : undefined}
+    onClick={onClick}
+    onKeyDown={(e) => onClick && (e.key === "Enter" || e.key === " ") && onClick()}
+    aria-label={label}
+    style={onClick ? { cursor: "pointer" } : undefined}
+  >
     <div className={`stat-card-icon ${iconClass}`} aria-hidden="true">
       {icon}
     </div>
@@ -37,7 +45,7 @@ const StatCard = ({ iconClass, icon, label, value, note, loading, error }) => (
  * DashboardOverview — the main dashboard content with stat cards
  * and quick-info panels. Fetches live data from the backend APIs.
  */
-const DashboardOverview = () => {
+const DashboardOverview = ({ onNavigate }) => {
   const { user } = useAuth();
   const role = user?.role || null;
 
@@ -75,17 +83,8 @@ const DashboardOverview = () => {
       }
     };
 
-    // Students endpoint requires ADMIN or FACULTY role
-    if (role === "ADMIN" || role === "FACULTY") {
-      fetchStat("students", dashboardService.getStudentCount);
-    } else {
-      setStats((prev) => ({
-        ...prev,
-        students: { value: null, loading: false, error: "Access restricted" },
-      }));
-    }
-
-    // These endpoints are accessible by all authenticated roles
+    // Aggregate metrics accessible by all authenticated roles (ADMIN, FACULTY, STUDENT)
+    fetchStat("students", dashboardService.getStudentCount);
     fetchStat("courses", dashboardService.getCourseCount);
     fetchStat("subjects", dashboardService.getSubjectCount);
     fetchStat("schedules", dashboardService.getScheduleCount);
@@ -139,13 +138,14 @@ const DashboardOverview = () => {
           }
           label="Total Students"
           value={stats.students.value ?? "—"}
-          note={
-            role === "ADMIN" || role === "FACULTY"
-              ? "From student service"
-              : undefined
-          }
+          note="From student service"
           loading={stats.students.loading}
           error={stats.students.error}
+          onClick={
+            (role === "ADMIN" || role === "FACULTY") && onNavigate
+              ? () => onNavigate("students")
+              : undefined
+          }
         />
 
         <StatCard
@@ -161,6 +161,7 @@ const DashboardOverview = () => {
           note="From academic service"
           loading={stats.courses.loading}
           error={stats.courses.error}
+          onClick={onNavigate ? () => onNavigate("academics") : undefined}
         />
 
         <StatCard
@@ -177,6 +178,7 @@ const DashboardOverview = () => {
           note="From academic service"
           loading={stats.subjects.loading}
           error={stats.subjects.error}
+          onClick={onNavigate ? () => onNavigate("academics") : undefined}
         />
 
         <StatCard
@@ -192,6 +194,7 @@ const DashboardOverview = () => {
           note="From academic service"
           loading={stats.schedules.loading}
           error={stats.schedules.error}
+          onClick={onNavigate ? () => onNavigate("academics") : undefined}
         />
       </div>
 

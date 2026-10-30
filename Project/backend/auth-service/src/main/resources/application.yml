@@ -40,6 +40,17 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
 
+# Initial Admin Seeding Configuration
+app:
+  init:
+    admin:
+      enabled: ${INIT_ADMIN_ENABLED:true}
+      username: ${INITIAL_ADMIN_USERNAME:admin}
+      password: ${INITIAL_ADMIN_PASSWORD:}
+      email: ${INITIAL_ADMIN_EMAIL:admin@smartcampus.com}
+      first-name: ${INITIAL_ADMIN_FIRST_NAME:Campus}
+      last-name: ${INITIAL_ADMIN_LAST_NAME:Admin}
+
 # Actuator Configuration
 management:
   endpoints:

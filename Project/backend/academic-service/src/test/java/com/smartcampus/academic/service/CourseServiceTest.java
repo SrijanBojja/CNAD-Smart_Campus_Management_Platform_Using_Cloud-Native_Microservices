@@ -36,6 +36,9 @@ class CourseServiceTest {
     @Mock
     private CourseRepository courseRepository;
 
+    @Mock
+    private com.smartcampus.academic.repository.SubjectRepository subjectRepository;
+
     @InjectMocks
     private CourseServiceImpl courseService;
 
@@ -135,5 +138,27 @@ class CourseServiceTest {
 
         assertThat(response).isNotNull();
         verify(courseRepository).save(sampleCourse);
+    }
+
+    @Test
+    @DisplayName("Delete course successfully when no subjects exist")
+    void testDeleteCourseSuccess() {
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(sampleCourse));
+        when(subjectRepository.findByCourseId(1L)).thenReturn(List.of());
+
+        courseService.deleteCourse(1L);
+
+        verify(courseRepository).delete(sampleCourse);
+    }
+
+    @Test
+    @DisplayName("Delete course fails when subjects exist")
+    void testDeleteCourseFailsWithSubjects() {
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(sampleCourse));
+        when(subjectRepository.findByCourseId(1L)).thenReturn(List.of(new com.smartcampus.academic.entity.Subject()));
+
+        assertThatThrownBy(() -> courseService.deleteCourse(1L))
+                .isInstanceOf(com.smartcampus.academic.exception.BadRequestException.class)
+                .hasMessageContaining("Cannot delete course");
     }
 }

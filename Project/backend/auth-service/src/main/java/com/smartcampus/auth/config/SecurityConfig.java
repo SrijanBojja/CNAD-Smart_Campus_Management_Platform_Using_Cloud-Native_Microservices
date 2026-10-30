@@ -85,6 +85,7 @@ public class SecurityConfig {
                                 "/actuator/**"
                         ).permitAll()
                         .requestMatchers("/api/v1/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/students", "/api/v1/auth/register-student", "/api/v1/auth/faculty", "/api/v1/auth/register-faculty").hasRole("ADMIN")
                         .requestMatchers("/api/v1/internal/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

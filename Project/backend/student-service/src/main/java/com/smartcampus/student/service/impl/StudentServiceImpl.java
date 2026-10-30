@@ -5,6 +5,7 @@ import com.smartcampus.student.client.dto.UserValidationResponse;
 import com.smartcampus.student.dto.request.CreateStudentRequest;
 import com.smartcampus.student.dto.request.UpdateStudentRequest;
 import com.smartcampus.student.dto.request.UpdateStudentStatusRequest;
+import com.smartcampus.student.dto.response.StudentCountResponse;
 import com.smartcampus.student.dto.response.StudentResponse;
 import com.smartcampus.student.entity.Student;
 import com.smartcampus.student.entity.StudentStatus;
@@ -168,5 +169,13 @@ public class StudentServiceImpl implements StudentService {
         log.info("Student status successfully updated for ID: {} to {}", updated.getId(), updated.getStatus());
 
         return StudentResponse.fromEntity(updated);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentCountResponse getStudentCount() {
+        long total = studentRepository.count();
+        log.debug("Retrieved total student count: {}", total);
+        return new StudentCountResponse(total);
     }
 }

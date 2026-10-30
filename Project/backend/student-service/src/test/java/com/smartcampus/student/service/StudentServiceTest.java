@@ -280,4 +280,17 @@ class StudentServiceTest {
         assertEquals(1, response.getTotalElements());
         assertEquals("STU2026001", response.getContent().get(0).getStudentNumber());
     }
+
+    @Test
+    @DisplayName("Get student count returns total number of students")
+    void testGetStudentCount() {
+        when(studentRepository.count()).thenReturn(15L);
+
+        com.smartcampus.student.dto.response.StudentCountResponse response = studentService.getStudentCount();
+
+        assertNotNull(response);
+        assertEquals(15L, response.getCount());
+        assertEquals(15L, response.getTotalElements());
+        verify(studentRepository, times(1)).count();
+    }
 }
